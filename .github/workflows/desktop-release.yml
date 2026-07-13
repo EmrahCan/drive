@@ -41,7 +41,6 @@ jobs:
           # Windows:
           WIN_CSC_LINK: ${{ secrets.WIN_CSC_LINK }}
           WIN_CSC_KEY_PASSWORD: ${{ secrets.WIN_CSC_KEY_PASSWORD }}
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npm run ${{ matrix.script }}
       - uses: actions/upload-artifact@v4
         with:
