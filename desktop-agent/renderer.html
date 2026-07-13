@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="tr">
+  <head>
+    <meta charset="utf-8" />
+    <title>Lexora Masaüstü Ajanı</title>
+    <style>
+      :root {
+        --bg: #0b0f1a;
+        --panel: #121826;
+        --border: #1f2937;
+        --text: #e5e7eb;
+        --muted: #94a3b8;
+        --primary: #3b82f6;
+        --danger: #ef4444;
+        --ok: #10b981;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: -apple-system, "Segoe UI", Roboto, Inter, sans-serif;
+        background: var(--bg);
+        color: var(--text);
+      }
+      header {
+        padding: 18px 24px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      h1 { font-size: 16px; margin: 0; }
+      .badge { font-size: 12px; color: var(--muted); }
+      main { padding: 20px 24px; display: grid; gap: 16px; }
+      .card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+      .row { display: flex; gap: 8px; align-items: center; }
+      button {
+        background: var(--primary); color: white; border: 0; padding: 8px 14px;
+        border-radius: 8px; cursor: pointer; font-size: 13px;
+      }
+      button.secondary { background: #1f2937; }
+      button.danger { background: var(--danger); }
+      input {
+        background: #0f172a; border: 1px solid var(--border); color: var(--text);
+        padding: 8px 10px; border-radius: 8px; font-size: 13px; width: 100%;
+      }
+      .folders { display: flex; flex-direction: column; gap: 6px; }
+      .folder {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 8px 10px; background: #0f172a; border-radius: 6px; font-size: 13px;
+      }
+      .folder button { background: transparent; color: var(--muted); padding: 2px 6px; }
+      #log {
+        background: #05070d; padding: 10px; border-radius: 8px; height: 220px;
+        overflow-y: auto; font-family: ui-monospace, Menlo, monospace;
+        font-size: 11.5px; white-space: pre-wrap; color: #9ca3af;
+      }
+      .muted { color: var(--muted); font-size: 12px; }
+      .hidden { display: none; }
+      h2 { font-size: 13px; margin: 0 0 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div>
+        <h1>Lexora Masaüstü Ajanı</h1>
+        <div class="badge" id="status">Yükleniyor…</div>
+      </div>
+      <button class="secondary" id="logoutBtn">Çıkış</button>
+    </header>
+
+    <main>
+      <section class="card" id="loginCard">
+        <h2>Lexora hesabınıza giriş yapın</h2>
+        <div style="display:grid; gap:8px; max-width:360px;">
+          <input id="email" type="email" placeholder="e-posta" autocomplete="email" />
+          <input id="password" type="password" placeholder="şifre" autocomplete="current-password" />
+          <button id="loginBtn">Giriş yap</button>
+          <div class="muted" id="loginErr"></div>
+        </div>
+      </section>
+
+      <section class="card hidden" id="foldersCard">
+        <div class="row" style="justify-content: space-between; margin-bottom: 10px;">
+          <h2 style="margin:0;">İzlenen klasörler</h2>
+          <div class="row">
+            <button id="pickBtn">Klasör ekle</button>
+            <button class="secondary" id="scanNowBtn">Şimdi tara</button>
+            <button class="secondary" id="resyncBtn">Yeniden yükle</button>
+          </div>
+        </div>
+        <div class="folders" id="folders"></div>
+        <div class="row" style="margin-top:12px; gap:8px; flex-wrap:wrap;">
+          <span class="muted">Periyodik tam tarama (dk, 0 = kapalı):</span>
+          <input id="rescanMinutes" type="number" min="0" step="5" style="width:80px;" />
+          <button class="secondary" id="saveRescanBtn">Kaydet</button>
+          <label class="row" style="margin-left:auto; gap:6px;">
+            <input type="checkbox" id="autoStart" />
+            <span class="muted">Bilgisayar açılışında otomatik başlat</span>
+          </label>
+        </div>
+        <div class="muted" style="margin-top:10px;">
+          Yalnızca PDF, DOCX, DOC, TXT, RTF, ODT (max 20MB) dosyalar yüklenir.
+          Yeni/değişen dosyalar anında; ek olarak başlangıçta ve seçtiğiniz aralıkta tam tarama yapılır.
+        </div>
+      </section>
+
+
+      <section class="card hidden" id="filtersCard">
+        <h2>Filtreler</h2>
+        <div style="display:grid; gap:10px;">
+          <div>
+            <div class="muted" style="margin-bottom:4px;">Dahil edilecek uzantılar (virgülle ayırın)</div>
+            <input id="includeExts" placeholder=".pdf, .docx, .txt" />
+          </div>
+          <div>
+            <div class="muted" style="margin-bottom:4px;">Hariç tutulacak yol kalıpları (virgülle ayırın — <code>*</code> joker destekli)</div>
+            <input id="excludePatterns" placeholder="node_modules, *.tmp, /Arsiv/, ~$" />
+          </div>
+          <div class="row" style="justify-content:flex-end;">
+            <button class="secondary" id="resetFiltersBtn">Varsayılana dön</button>
+            <button id="saveFiltersBtn">Kaydet</button>
+          </div>
+          <div class="muted">Ayarlar değişince izleme yeniden başlatılır. Yalnızca dahil uzantılar yüklenir; kalıba uyan yol/dosyalar atlanır.</div>
+        </div>
+      </section>
+
+      <section class="card hidden" id="logCard">
+        <h2>Etkinlik günlüğü</h2>
+        <div id="log"></div>
+      </section>
+    </main>
+
+    <script>
+      const $ = (id) => document.getElementById(id);
+      const status = $("status");
+      const loginCard = $("loginCard");
+      const foldersCard = $("foldersCard");
+      const logCard = $("logCard");
+      const filtersCard = $("filtersCard");
+      const log = $("log");
+
+      const DEFAULT_INCLUDE = [".pdf", ".docx", ".doc", ".txt", ".rtf", ".odt"];
+      const DEFAULT_EXCLUDE = ["node_modules", ".git", ".tmp", "~$"];
+
+      function render(state) {
+        if (state.signedIn) {
+          status.textContent = `Bağlı: ${state.email} • ${state.syncedCount} dosya senkron`;
+          loginCard.classList.add("hidden");
+          foldersCard.classList.remove("hidden");
+          filtersCard.classList.remove("hidden");
+          logCard.classList.remove("hidden");
+        } else {
+          status.textContent = "Giriş yapılmadı";
+          loginCard.classList.remove("hidden");
+          foldersCard.classList.add("hidden");
+          filtersCard.classList.add("hidden");
+          logCard.classList.add("hidden");
+        }
+        const wrap = $("folders");
+        wrap.innerHTML = "";
+        (state.folders || []).forEach((f) => {
+          const row = document.createElement("div");
+          row.className = "folder";
+          row.innerHTML = `<span>${f}</span>`;
+          const btn = document.createElement("button");
+          btn.textContent = "Kaldır";
+          btn.onclick = async () => { await window.agent.removeFolder(f); refresh(); };
+          row.appendChild(btn);
+          wrap.appendChild(row);
+        });
+        if (!state.folders?.length && state.signedIn) {
+          wrap.innerHTML = '<div class="muted">Henüz klasör eklenmedi.</div>';
+        }
+        const f = state.filters || { includeExts: DEFAULT_INCLUDE, excludePatterns: DEFAULT_EXCLUDE };
+        if (document.activeElement?.id !== "includeExts") $("includeExts").value = (f.includeExts || []).join(", ");
+        if (document.activeElement?.id !== "excludePatterns") $("excludePatterns").value = (f.excludePatterns || []).join(", ");
+        if (document.activeElement?.id !== "rescanMinutes") $("rescanMinutes").value = state.rescanMinutes ?? 60;
+        $("autoStart").checked = state.autoStart !== false;
+      }
+
+
+
+      async function refresh() { render(await window.agent.getState()); }
+
+      function parseList(v) { return v.split(",").map((s) => s.trim()).filter(Boolean); }
+
+      $("loginBtn").onclick = async () => {
+        $("loginErr").textContent = "";
+        try {
+          await window.agent.login({ email: $("email").value, password: $("password").value });
+          await refresh();
+        } catch (e) { $("loginErr").textContent = e.message; }
+      };
+      $("logoutBtn").onclick = async () => { await window.agent.logout(); refresh(); };
+      $("pickBtn").onclick = async () => { await window.agent.pickFolder(); refresh(); };
+      $("resyncBtn").onclick = async () => { await window.agent.resync(); };
+      $("scanNowBtn").onclick = async () => { await window.agent.scanNow(); };
+      $("saveRescanBtn").onclick = async () => {
+        await window.agent.setRescan(Number($("rescanMinutes").value) || 0);
+        refresh();
+      };
+      $("autoStart").onchange = async (e) => {
+        await window.agent.setAutoStart(e.target.checked);
+      };
+
+
+
+      $("saveFiltersBtn").onclick = async () => {
+        await window.agent.setFilters({
+          includeExts: parseList($("includeExts").value),
+          excludePatterns: parseList($("excludePatterns").value),
+        });
+        refresh();
+      };
+      $("resetFiltersBtn").onclick = async () => {
+        await window.agent.setFilters({ includeExts: DEFAULT_INCLUDE, excludePatterns: DEFAULT_EXCLUDE });
+        refresh();
+      };
+
+      window.agent.onLog((line) => {
+        log.textContent += line + "\n";
+        log.scrollTop = log.scrollHeight;
+      });
+      window.agent.onState(render);
+      refresh();
+    </script>
+  </body>
+</html>
