@@ -4,12 +4,12 @@
   "description": "Lexora Masaüstü Ajanı — seçilen klasörlerdeki hukuki belgeleri otomatik olarak Lexora'ya yükler.",
   "main": "main.cjs",
   "author": "Lexora",
-  "repository": {"type": "git","url": "https://github.com/EmrahCan/drive.git"},
   "scripts": {
     "start": "electron .",
-    "dist:mac": "electron-builder --mac",
-    "dist:win": "electron-builder --win",
-    "dist:linux": "electron-builder --linux"
+    "dist": "electron-builder",
+    "dist:mac": "electron-builder --mac --publish never",
+    "dist:win": "electron-builder --win --publish never",
+    "dist:linux": "electron-builder --linux --publish never"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0",
@@ -28,25 +28,61 @@
     "productName": "Lexora Agent",
     "copyright": "Copyright © 2026 Lexora",
     "asar": true,
-    "files": ["main.cjs","preload.cjs","renderer.html","build/**/*"],
-    "directories": {"buildResources": "build","output": "release"},
-    "publish": [{"provider":"github","owner":"EmrahCan","repo":"drive"}],
+    "files": [
+      "main.cjs",
+      "preload.cjs",
+      "renderer.html",
+      "build/**/*"
+    ],
+    "directories": {
+      "buildResources": "build",
+      "output": "release"
+    },
     "mac": {
-      "target": [{"target":"dmg","arch":["universal"]}],
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "universal"
+          ]
+        },
+        {
+          "target": "zip",
+          "arch": [
+            "universal"
+          ]
+        }
+      ],
       "category": "public.app-category.productivity",
       "icon": "build/icon.png",
       "hardenedRuntime": false,
       "gatekeeperAssess": false,
-      "identity": null,
-      "artifactName": "Lexora-Agent.${ext}"
+      "identity": null
     },
-    "dmg": {"title": "Lexora Agent","writeUpdateInfo": false},
+    "dmg": {
+      "title": "Lexora Agent",
+      "artifactName": "Lexora-Agent.${ext}",
+      "writeUpdateInfo": false
+    },
     "win": {
-      "target": [{"target":"nsis","arch":["x64"]}],
-      "icon": "build/icon.png",
-      "artifactName": "Lexora-Agent-Setup.${ext}"
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.png"
     },
     "nsis": {
+      "artifactName": "Lexora-Agent-Setup.${ext}",
       "oneClick": false,
       "perMachine": false,
       "allowToChangeInstallationDirectory": true,
@@ -55,7 +91,10 @@
       "shortcutName": "Lexora Agent"
     },
     "linux": {
-      "target": ["AppImage"],
+      "target": [
+        "AppImage",
+        "deb"
+      ],
       "category": "Office",
       "icon": "build/icon.png",
       "artifactName": "Lexora-Agent.${ext}"
